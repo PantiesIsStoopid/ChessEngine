@@ -14,15 +14,10 @@ int main()
   AllInit();
 
   S_BOARD board[1]; // Create a board structure
-
-  ParseFen(PAWNMOVES, board); // Parse the sample FEN string
-  PrintBoard(board);          // Print the board
-
   S_MOVELIST list[1]; // Create a move list structure
 
+  ParseFen(PAWNMOVES, board); // Parse the sample FEN string
   GenerateAllMoves(board, list); // Generate all possible moves
-
-  PrintMoveList(list); // Print the move list
 
   return 0; // Return success
 }

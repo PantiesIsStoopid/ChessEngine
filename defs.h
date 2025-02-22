@@ -205,8 +205,10 @@ extern int PieceKnight[13];      // Knight piece identification array
 extern int PieceKing[13];        // King piece identification array
 extern int PieceRookQueen[13];   // Rook and Queen identification array
 extern int PieceBishopQueen[13]; // Bishop and Queen identification array
+extern int PieceSlides[13];      // Sliding piece identification array
 
 // External functions
+
 // init.c
 extern void AllInit(); // Initialize all components
 
