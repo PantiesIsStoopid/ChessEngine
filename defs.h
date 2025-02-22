@@ -134,14 +134,15 @@ typedef struct
 
   U64 posKey;
 
-  int pceNum[13]; // number of pieces of each type
-  int bigPce[3];  // number of non-pawn pieces
-  int majPce[3];  // number of rooks and queens
-  int minPce[3];  // number of bishops and knights
+  int pceNum[13];  // number of pieces of each type
+  int bigPce[2];   // number of non-pawn pieces
+  int majPce[2];   // number of rooks and queens
+  int minPce[2];   // number of bishops and knights
+  int material[2]; // material score
 
   S_UNDO history[MAXGAMEMOVES];
 
-  int plist[13][10]; // piece list
+  int pList[13][10]; // piece list
 
 } S_BOARD;
 
@@ -169,6 +170,12 @@ extern char SideChar[];
 extern char RankChar[];
 extern char FileChar[];
 
+extern int PieceBig[13];
+extern int PieceMaj[13];
+extern int PieceMin[13];
+extern int PieceVal[13];
+extern int PieceCol[13];
+
 // FUNCTIONS
 
 extern void AllInit();
@@ -182,5 +189,6 @@ extern U64 GeneratePosKey(const S_BOARD *pos);
 extern void ResetBoard(S_BOARD *pos);
 extern int ParseFen(char *fen, S_BOARD *pos);
 extern void PrintBoard(const S_BOARD *pos);
+extern void UpdateListsMaterial(S_BOARD *pos);
 
 #endif
