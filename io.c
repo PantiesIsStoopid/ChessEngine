@@ -3,81 +3,128 @@
 #include "stdio.h"
 #include "defs.h"
 
-// Function to print a square in algebraic notation (e.g., 'a1', 'h8')
 char *PrSq(const int sq)
 {
-  static char sqStr[3];  // Static buffer to hold the square string (e.g., "a1")
 
-  // Get the file and rank of the square
+  static char SqStr[3];
+
   int file = FilesBrd[sq];
   int rank = RanksBrd[sq];
 
-  // Format the square string as 'a1', 'h8', etc.
-  sprintf(sqStr, "%c%c", ('a' + file), ('1' + rank));
+  sprintf(SqStr, "%c%c", ('a' + file), ('1' + rank));
 
-  return sqStr;  // Return the formatted string
+  return SqStr;
 }
 
-// Function to print a move in algebraic notation (e.g., 'e2e4', 'e7e8q')
 char *PrMove(const int move)
 {
-  static char MvStr[6];  // Static buffer to hold the move string (e.g., "e2e4")
 
-  // Get the file and rank of the source and destination squares
+  static char MvStr[6];
+
   int ff = FilesBrd[FROMSQ(move)];
   int rf = RanksBrd[FROMSQ(move)];
   int ft = FilesBrd[TOSQ(move)];
   int rt = RanksBrd[TOSQ(move)];
 
-  // Check if the move is a promotion
   int promoted = PROMOTED(move);
 
-  // If it's a promotion, append the promotion piece (e.g., 'q', 'n', 'r', 'b')
   if (promoted)
   {
-    char pchar = 'q';  // Default to Queen promotion
-
-    // Check the type of promotion and set the corresponding character
-    if (IsKn(promoted)) {
-      pchar = 'n';  // Knight promotion
-    } else if (IsRQ(promoted) && !IsBQ(promoted)) {
-      pchar = 'r';  // Rook promotion
-    } else if (!IsRQ(promoted) && IsBQ(promoted)) {
-      pchar = 'b';  // Bishop promotion
+    char pchar = 'q';
+    if (IsKn(promoted))
+    {
+      pchar = 'n';
     }
-
-    // Format the move with promotion (e.g., 'e7e8q')
+    else if (IsRQ(promoted) && !IsBQ(promoted))
+    {
+      pchar = 'r';
+    }
+    else if (!IsRQ(promoted) && IsBQ(promoted))
+    {
+      pchar = 'b';
+    }
     sprintf(MvStr, "%c%c%c%c%c", ('a' + ff), ('1' + rf), ('a' + ft), ('1' + rt), pchar);
   }
   else
   {
-    // Format the move without promotion (e.g., 'e2e4')
     sprintf(MvStr, "%c%c%c%c", ('a' + ff), ('1' + rf), ('a' + ft), ('1' + rt));
   }
 
-  return MvStr;  // Return the formatted move string
+  return MvStr;
 }
 
-// Function to print the move list (used for debugging or displaying moves)
-void PrintMoveList(const S_MOVELIST *list)
+int ParseMove(char *ptrChar, S_BOARD *pos)
 {
-  int index = 0;  // Index for iterating through the move list
-  int score = 0;  // Score associated with each move
-  int move = 0;   // The actual move value
 
-  // Print header for the move list
-  printf("MoveList:\n");
+  ASSERT(CheckBoard(pos));
 
-  // Loop through all moves in the move list and print details
-  for (index = 0; index < list->count; ++index)
+  if (ptrChar[1] > '8' || ptrChar[1] < '1')
+    return NOMOVE;
+  if (ptrChar[3] > '8' || ptrChar[3] < '1')
+    return NOMOVE;
+  if (ptrChar[0] > 'h' || ptrChar[0] < 'a')
+    return NOMOVE;
+  if (ptrChar[2] > 'h' || ptrChar[2] < 'a')
+    return NOMOVE;
+
+  int from = FR2SQ(ptrChar[0] - 'a', ptrChar[1] - '1');
+  int to = FR2SQ(ptrChar[2] - 'a', ptrChar[3] - '1');
+
+  ASSERT(SqOnBoard(from) && SqOnBoard(to));
+
+  S_MOVELIST list[1];
+  GenerateAllMoves(pos, list);
+  int MoveNum = 0;
+  int Move = 0;
+  int PromPce = EMPTY;
+
+  for (MoveNum = 0; MoveNum < list->count; ++MoveNum)
   {
-    move = list->moves[index].move;  // Get the move from the list
-    score = list->moves[index].score;  // Get the score for the move
-
-    // Print move number, move description, and score
-    printf("Move:%d > %s (score:%d)\n", index + 1, PrMove(move), score);
+    Move = list->moves[MoveNum].move;
+    if (FROMSQ(Move) == from && TOSQ(Move) == to)
+    {
+      PromPce = PROMOTED(Move);
+      if (PromPce != EMPTY)
+      {
+        if (IsRQ(PromPce) && !IsBQ(PromPce) && ptrChar[4] == 'r')
+        {
+          return Move;
+        }
+        else if (!IsRQ(PromPce) && IsBQ(PromPce) && ptrChar[4] == 'b')
+        {
+          return Move;
+        }
+        else if (IsRQ(PromPce) && IsBQ(PromPce) && ptrChar[4] == 'q')
+        {
+          return Move;
+        }
+        else if (IsKn(PromPce) && ptrChar[4] == 'n')
+        {
+          return Move;
+        }
+        continue;
+      }
+      return Move;
+    }
   }
 
-  // Print the total number of moves in the move list
+  return NOMOVE;
+}
+
+void PrintMoveList(const S_MOVELIST *list)
+{
+  int index = 0;
+  int score = 0;
+  int move = 0;
+  printf("MoveList:\n");
+
+  for (index = 0; index < list->count; ++index)
+  {
+
+    move = list->moves[index].move;
+    score = list->moves[index].score;
+
+    printf("Move:%d > %s (score:%d)\n", index + 1, PrMove(move), score);
+  }
   printf("MoveList Total %d Moves:\n\n", list->count);
 }

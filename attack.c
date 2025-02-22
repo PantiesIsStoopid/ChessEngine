@@ -3,13 +3,11 @@
 #include "stdio.h"
 #include "defs.h"
 
-// Direction arrays for various pieces' movements
-const int KnDir[8] = {-8, -19, -21, -12, 8, 19, 21, 12}; // Knight directions
-const int RkDir[4] = {-1, -10, 1, 10};                   // Rook directions
-const int BiDir[4] = {-9, -11, 11, 9};                   // Bishop directions
-const int KiDir[8] = {-1, -10, 1, 10, -9, -11, 11, 9};   // King directions
+const int KnDir[8] = {-8, -19, -21, -12, 8, 19, 21, 12};
+const int RkDir[4] = {-1, -10, 1, 10};
+const int BiDir[4] = {-9, -11, 11, 9};
+const int KiDir[8] = {-1, -10, 1, 10, -9, -11, 11, 9};
 
-// Function to check if a square is attacked
 int SqAttacked(const int sq, const int side, const S_BOARD *pos)
 {
 
@@ -19,83 +17,91 @@ int SqAttacked(const int sq, const int side, const S_BOARD *pos)
   ASSERT(SideValid(side));
   ASSERT(CheckBoard(pos));
 
-  // Check if the square is attacked by a pawn
+  // pawns
   if (side == WHITE)
   {
     if (pos->pieces[sq - 11] == wP || pos->pieces[sq - 9] == wP)
     {
-      return TRUE; // Square is attacked by white pawn
+      return TRUE;
     }
   }
   else
   {
     if (pos->pieces[sq + 11] == bP || pos->pieces[sq + 9] == bP)
     {
-      return TRUE; // Square is attacked by black pawn
+      return TRUE;
     }
   }
 
-  // Check if the square is attacked by a knight
+  // knights
   for (index = 0; index < 8; ++index)
   {
     pce = pos->pieces[sq + KnDir[index]];
-    if (IsKn(pce) && PieceCol[pce] == side)
+    ASSERT(PceValidEmptyOffbrd(pce));
+    if (pce != OFFBOARD && IsKn(pce) && PieceCol[pce] == side)
     {
-      return TRUE; // Square is attacked by a knight
+      return TRUE;
     }
   }
 
-  // Check if the square is attacked by a rook or queen
+  // rooks, queens
   for (index = 0; index < 4; ++index)
   {
     dir = RkDir[index];
     t_sq = sq + dir;
+    ASSERT(SqIs120(t_sq));
     pce = pos->pieces[t_sq];
+    ASSERT(PceValidEmptyOffbrd(pce));
     while (pce != OFFBOARD)
     {
       if (pce != EMPTY)
       {
         if (IsRQ(pce) && PieceCol[pce] == side)
         {
-          return TRUE; // Square is attacked by a rook or queen
+          return TRUE;
         }
-        break; // Blocked by another piece
+        break;
       }
       t_sq += dir;
+      ASSERT(SqIs120(t_sq));
       pce = pos->pieces[t_sq];
     }
   }
 
-  // Check if the square is attacked by a bishop or queen
+  // bishops, queens
   for (index = 0; index < 4; ++index)
   {
     dir = BiDir[index];
     t_sq = sq + dir;
+    ASSERT(SqIs120(t_sq));
     pce = pos->pieces[t_sq];
+    ASSERT(PceValidEmptyOffbrd(pce));
     while (pce != OFFBOARD)
     {
       if (pce != EMPTY)
       {
         if (IsBQ(pce) && PieceCol[pce] == side)
         {
-          return TRUE; // Square is attacked by a bishop or queen
+          return TRUE;
         }
-        break; // Blocked by another piece
+        break;
       }
       t_sq += dir;
+      ASSERT(SqIs120(t_sq));
       pce = pos->pieces[t_sq];
     }
   }
 
-  // Check if the square is attacked by a king
+  // kings
   for (index = 0; index < 8; ++index)
   {
     pce = pos->pieces[sq + KiDir[index]];
+    ASSERT(PceValidEmptyOffbrd(pce));
     if (pce != OFFBOARD && IsKi(pce) && PieceCol[pce] == side)
     {
-      return TRUE; // Square is attacked by a king
+      return TRUE;
     }
   }
 
-  return FALSE; // Square is not attacked
+  return FALSE;
 }

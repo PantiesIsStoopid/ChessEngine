@@ -4,47 +4,133 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-// Macro to generate a random 64-bit number using rand()
 #define RAND_64 ((U64)rand() |       \
-                 (U64)rand()         \
-                     << 15 |         \
-                 (U64)rand()         \
-                     << 30 |         \
-                 (U64)rand()         \
-                     << 45 |         \
-                 ((U64)rand() & 0xf) \
-                     << 60)
+                 (U64)rand() << 15 | \
+                 (U64)rand() << 30 | \
+                 (U64)rand() << 45 | \
+                 ((U64)rand() & 0xf) << 60)
 
-// Global arrays for board representation and hash keys
-int Sq120ToSq64[BRD_SQ_NUM];  // Mapping from 120-square board to 64-square board
-int Sq64ToSq120[64];           // Mapping from 64-square board to 120-square board
+int Sq120ToSq64[BRD_SQ_NUM];
+int Sq64ToSq120[64];
 
-U64 SetMask[64];               // Masks for setting specific bits in a bitboard
-U64 ClearMask[64];             // Masks for clearing specific bits in a bitboard
+U64 SetMask[64];
+U64 ClearMask[64];
 
-U64 PieceKeys[13][120];        // Hash keys for pieces
-U64 SideKey;                   // Hash key for side to move
-U64 CastleKeys[16];            // Hash keys for castling permissions
+U64 PieceKeys[13][120];
+U64 SideKey;
+U64 CastleKeys[16];
 
-int FilesBrd[BRD_SQ_NUM];      // Array to store file (column) of each square
-int RanksBrd[BRD_SQ_NUM];      // Array to store rank (row) of each square
+int FilesBrd[BRD_SQ_NUM];
+int RanksBrd[BRD_SQ_NUM];
 
-// Function to initialize the file and rank board arrays
+U64 FileBBMask[8];
+U64 RankBBMask[8];
+
+U64 BlackPassedMask[64];
+U64 WhitePassedMask[64];
+U64 IsolatedMask[64];
+
+S_OPTIONS EngineOptions[1];
+
+void InitEvalMasks()
+{
+
+  int sq, tsq, r, f;
+
+  for (sq = 0; sq < 8; ++sq)
+  {
+    FileBBMask[sq] = 0ULL;
+    RankBBMask[sq] = 0ULL;
+  }
+
+  for (r = RANK_8; r >= RANK_1; r--)
+  {
+    for (f = FILE_A; f <= FILE_H; f++)
+    {
+      sq = r * 8 + f;
+      FileBBMask[f] |= (1ULL << sq);
+      RankBBMask[r] |= (1ULL << sq);
+    }
+  }
+
+  for (sq = 0; sq < 64; ++sq)
+  {
+    IsolatedMask[sq] = 0ULL;
+    WhitePassedMask[sq] = 0ULL;
+    BlackPassedMask[sq] = 0ULL;
+  }
+
+  for (sq = 0; sq < 64; ++sq)
+  {
+    tsq = sq + 8;
+
+    while (tsq < 64)
+    {
+      WhitePassedMask[sq] |= (1ULL << tsq);
+      tsq += 8;
+    }
+
+    tsq = sq - 8;
+    while (tsq >= 0)
+    {
+      BlackPassedMask[sq] |= (1ULL << tsq);
+      tsq -= 8;
+    }
+
+    if (FilesBrd[SQ120(sq)] > FILE_A)
+    {
+      IsolatedMask[sq] |= FileBBMask[FilesBrd[SQ120(sq)] - 1];
+
+      tsq = sq + 7;
+      while (tsq < 64)
+      {
+        WhitePassedMask[sq] |= (1ULL << tsq);
+        tsq += 8;
+      }
+
+      tsq = sq - 9;
+      while (tsq >= 0)
+      {
+        BlackPassedMask[sq] |= (1ULL << tsq);
+        tsq -= 8;
+      }
+    }
+
+    if (FilesBrd[SQ120(sq)] < FILE_H)
+    {
+      IsolatedMask[sq] |= FileBBMask[FilesBrd[SQ120(sq)] + 1];
+
+      tsq = sq + 9;
+      while (tsq < 64)
+      {
+        WhitePassedMask[sq] |= (1ULL << tsq);
+        tsq += 8;
+      }
+
+      tsq = sq - 7;
+      while (tsq >= 0)
+      {
+        BlackPassedMask[sq] |= (1ULL << tsq);
+        tsq -= 8;
+      }
+    }
+  }
+}
+
 void InitFilesRanksBrd()
 {
+
   int index = 0;
   int file = FILE_A;
   int rank = RANK_1;
   int sq = A1;
 
-  // Set all board squares to OFFBOARD initially
   for (index = 0; index < BRD_SQ_NUM; ++index)
   {
     FilesBrd[index] = OFFBOARD;
     RanksBrd[index] = OFFBOARD;
   }
 
-  // Map the correct file and rank for each square on the board
   for (rank = RANK_1; rank <= RANK_8; ++rank)
   {
     for (file = FILE_A; file <= FILE_H; ++file)
@@ -56,13 +142,11 @@ void InitFilesRanksBrd()
   }
 }
 
-// Function to initialize the hash keys for pieces, side, and castling
 void InitHashKeys()
 {
+
   int index = 0;
   int index2 = 0;
-
-  // Assign random hash keys for each piece type and square
   for (index = 0; index < 13; ++index)
   {
     for (index2 = 0; index2 < 120; ++index2)
@@ -70,8 +154,6 @@ void InitHashKeys()
       PieceKeys[index][index2] = RAND_64;
     }
   }
-
-  // Generate random keys for side and castling permissions
   SideKey = RAND_64;
   for (index = 0; index < 16; ++index)
   {
@@ -79,52 +161,47 @@ void InitHashKeys()
   }
 }
 
-// Function to initialize the bit masks for each square
 void InitBitMasks()
 {
   int index = 0;
 
-  // Set all masks to 0 initially
-  for (index = 0; index < 64; ++index)
+  for (index = 0; index < 64; index++)
   {
     SetMask[index] = 0ULL;
     ClearMask[index] = 0ULL;
   }
 
-  // Set the SetMask to have a bit set at each square position
-  for (index = 0; index < 64; ++index)
+  for (index = 0; index < 64; index++)
   {
-    SetMask[index] |= (1ULL << index);   // Set the bit at the index
-    ClearMask[index] = ~SetMask[index];  // Clear the bit at the index
+    SetMask[index] |= (1ULL << index);
+    ClearMask[index] = ~SetMask[index];
   }
 }
 
-// Function to initialize the 120-square and 64-square board mappings
 void InitSq120To64()
 {
+
   int index = 0;
   int file = FILE_A;
   int rank = RANK_1;
   int sq = A1;
   int sq64 = 0;
-
-  // Set all squares to invalid values initially
   for (index = 0; index < BRD_SQ_NUM; ++index)
   {
-    Sq120ToSq64[index] = 65;  // Invalid square
+    Sq120ToSq64[index] = 65;
   }
 
   for (index = 0; index < 64; ++index)
   {
-    Sq64ToSq120[index] = 120; // Invalid square
+    Sq64ToSq120[index] = 120;
   }
 
-  // Fill the mappings for valid squares on the board
   for (rank = RANK_1; rank <= RANK_8; ++rank)
   {
     for (file = FILE_A; file <= FILE_H; ++file)
     {
       sq = FR2SQ(file, rank);
+      ASSERT(SqOnBoard(sq));
       Sq64ToSq120[sq64] = sq;
       Sq120ToSq64[sq] = sq64;
       sq64++;
@@ -132,11 +209,13 @@ void InitSq120To64()
   }
 }
 
-// Function to initialize all data structures
 void AllInit()
 {
   InitSq120To64();
   InitBitMasks();
   InitHashKeys();
   InitFilesRanksBrd();
+  InitEvalMasks();
+  InitMvvLva();
+  InitPolyBook();
 }

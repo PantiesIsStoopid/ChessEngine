@@ -1,23 +1,77 @@
 // vice.c
 
 #include "stdio.h"
-#include "stdlib.h"
 #include "defs.h"
+#include "stdlib.h"
+#include "string.h"
 
-// FEN string for a sample position (can be used for initialization)
-#define PAWNMOVES "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1"
+#define WAC1 "r1b1k2r/ppppnppp/2n2q2/2b5/3NP3/2P1B3/PP3PPP/RN1QKB1R w KQkq - 0 1"
+#define PERFT "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
 
-
-int main()
+int main(int argc, char *argv[])
 {
-  // Initialize all necessary data structures
+
   AllInit();
 
-  S_BOARD board[1]; // Create a board structure
-  S_MOVELIST list[1]; // Create a move list structure
+  S_BOARD pos[1];
+  S_SEARCHINFO info[1];
+  info->quit = FALSE;
+  pos->HashTable->pTable = NULL;
+  InitHashTable(pos->HashTable, 64);
+  setbuf(stdin, NULL);
+  setbuf(stdout, NULL);
 
-  ParseFen(PAWNMOVES, board); // Parse the sample FEN string
-  GenerateAllMoves(board, list); // Generate all possible moves
+  int ArgNum = 0;
 
-  return 0; // Return success
+  for (ArgNum = 0; ArgNum < argc; ++ArgNum)
+  {
+    if (strncmp(argv[ArgNum], "NoBook", 6) == 0)
+    {
+      EngineOptions->UseBook = FALSE;
+      printf("Book Off\n");
+    }
+  }
+
+  printf("Welcome to Vice! Type 'vice' for console mode...\n");
+
+  char line[256];
+  while (TRUE)
+  {
+    memset(&line[0], 0, sizeof(line));
+
+    fflush(stdout);
+    if (!fgets(line, 256, stdin))
+      continue;
+    if (line[0] == '\n')
+      continue;
+    if (!strncmp(line, "uci", 3))
+    {
+      Uci_Loop(pos, info);
+      if (info->quit == TRUE)
+        break;
+      continue;
+    }
+    else if (!strncmp(line, "xboard", 6))
+    {
+      XBoard_Loop(pos, info);
+      if (info->quit == TRUE)
+        break;
+      continue;
+    }
+    else if (!strncmp(line, "vice", 4))
+    {
+      Console_Loop(pos, info);
+      if (info->quit == TRUE)
+        break;
+      continue;
+    }
+    else if (!strncmp(line, "quit", 4))
+    {
+      break;
+    }
+  }
+
+  free(pos->HashTable->pTable);
+  CleanPolyBook();
+  return 0;
 }
