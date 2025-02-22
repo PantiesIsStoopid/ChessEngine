@@ -52,3 +52,4 @@ void PrintBitBoard(U64 bb)
   }
   printf("\n\n");
 }
+
