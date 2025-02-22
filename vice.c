@@ -2,30 +2,27 @@
 #include "stdlib.h"
 #include "defs.h"
 
+#define FEN1 "rnbqkbnr/pppppppp/8/8/4p3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+#define FEN2 "rnbqkbnr/pp1ppppp/8/2p5/4p3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2"
+#define FEN3 "rnbqkbnr/pp1ppppp/8/2p5/4p3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"
+
+
 int main()
 {
 
   AllInit();
  
   
-  int PieceOne = rand();
-  int PieceTwo = rand();
-  int PieceThree = rand();
-  int PieceFour = rand();
+  S_BOARD board[1];
 
-  printf("PieceOne:%X\n", PieceOne);
-  printf("PieceTwo:%X\n", PieceTwo);
-  printf("PieceThree:%X\n", PieceThree);
-  printf("PieceFour:%X\n", PieceFour);
-
-  int Key = PieceOne ^ PieceTwo ^ PieceThree ^ PieceFour;
-  int TempKey = PieceOne;
-  TempKey ^= PieceTwo;
-  TempKey ^= PieceThree;
-  TempKey ^= PieceFour;
-
-  printf("Key:%X\n", Key);
-  printf("TempKey:%X\n", TempKey);
+  ParseFen(START_FEN, board);
+  PrintBoard(board);
+  ParseFen(FEN1, board);
+  PrintBoard(board);
+  ParseFen(FEN2, board);
+  PrintBoard(board);
+  ParseFen(FEN3, board);
+  PrintBoard(board);
 
 
   return 0;

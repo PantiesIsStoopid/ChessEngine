@@ -1,8 +1,9 @@
 #include "stdio.h"
 #include "defs.h"
 
-int Parse_Fen(char *fen, S_BOARD *pos)
+int ParseFen(char *fen, S_BOARD *pos)
 {
+
   ASSERT(fen != NULL);
   ASSERT(pos != NULL);
 
@@ -39,6 +40,24 @@ int Parse_Fen(char *fen, S_BOARD *pos)
     case 'q':
       piece = bQ;
       break;
+    case 'P':
+      piece = wP;
+      break;
+    case 'R':
+      piece = wR;
+      break;
+    case 'N':
+      piece = wN;
+      break;
+    case 'B':
+      piece = wB;
+      break;
+    case 'K':
+      piece = wK;
+      break;
+    case 'Q':
+      piece = wQ;
+      break;
 
     case '1':
     case '2':
@@ -51,6 +70,7 @@ int Parse_Fen(char *fen, S_BOARD *pos)
       piece = EMPTY;
       count = *fen - '0';
       break;
+
     case '/':
     case ' ':
       rank--;
@@ -65,7 +85,7 @@ int Parse_Fen(char *fen, S_BOARD *pos)
 
     for (i = 0; i < count; i++)
     {
-      sq64 = FR2SQ(file, rank);
+      sq64 = rank * 8 + file;
       sq120 = SQ120(sq64);
       if (piece != EMPTY)
       {
@@ -75,6 +95,7 @@ int Parse_Fen(char *fen, S_BOARD *pos)
     }
     fen++;
   }
+
   ASSERT(*fen == 'w' || *fen == 'b');
 
   pos->side = (*fen == 'w') ? WHITE : BLACK;
@@ -119,9 +140,10 @@ int Parse_Fen(char *fen, S_BOARD *pos)
 
     pos->enPas = FR2SQ(file, rank);
   }
+
   pos->posKey = GeneratePosKey(pos);
 
-  return 0; 
+  return 0;
 }
 
 void ResetBoard(S_BOARD *pos)
@@ -163,4 +185,39 @@ void ResetBoard(S_BOARD *pos)
   pos->castlePerm = 0;
 
   pos->posKey = 0ULL;
+}
+
+void PrintBoard(const S_BOARD *pos)
+{
+
+  int sq, file, rank, piece;
+
+  printf("\nGame Board:\n\n");
+
+  for (rank = RANK_8; rank >= RANK_1; rank--)
+  {
+    printf("%d  ", rank + 1);
+    for (file = FILE_A; file <= FILE_H; file++)
+    {
+      sq = FR2SQ(file, rank);
+      piece = pos->pieces[sq];
+      printf("%3c", PceChar[piece]);
+    }
+    printf("\n");
+  }
+
+  printf("\n   ");
+  for (file = FILE_A; file <= FILE_H; file++)
+  {
+    printf("%3c", 'a' + file);
+  }
+  printf("\n");
+  printf("side:%c\n", SideChar[pos->side]);
+  printf("enPas:%d\n", pos->enPas);
+  printf("castle:%c%c%c%c\n",
+         pos->castlePerm & WKCA ? 'K' : '-',
+         pos->castlePerm & WQCA ? 'Q' : '-',
+         pos->castlePerm & BKCA ? 'k' : '-',
+         pos->castlePerm & BQCA ? 'q' : '-');
+  printf("PosKey:%llX\n", pos->posKey);
 }
