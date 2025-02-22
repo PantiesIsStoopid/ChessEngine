@@ -23,7 +23,6 @@ int GetTimeMs()
 #endif
 }
 
-// http://home.arcor.de/dreamlike/chess/
 int InputWaiting()
 {
 #ifdef WIN32

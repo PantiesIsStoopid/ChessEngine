@@ -366,39 +366,52 @@ void ResetBoard(S_BOARD *pos)
 
   pos->posKey = 0ULL;
 }
+
 void PrintBoard(const S_BOARD *pos)
 {
+  FILE *file = fopen("board_output.txt", "w"); // Open the file for writing, will clear it
+  if (file == NULL)
+  {
+    printf("Error opening file.\n");
+    return;
+  }
 
-  int sq, file, rank, piece;
-
-  printf("\nGame Board:\n\n");
+  int sq, fileIndex, rank, piece;
 
   for (rank = RANK_8; rank >= RANK_1; rank--)
   {
-    printf("%d  ", rank + 1);
-    for (file = FILE_A; file <= FILE_H; file++)
+    fprintf(file, "%d  ", rank + 1);
+    for (fileIndex = FILE_A; fileIndex <= FILE_H; fileIndex++)
     {
-      sq = FR2SQ(file, rank);
+      sq = FR2SQ(fileIndex, rank);
       piece = pos->pieces[sq];
-      printf("%3c", PceChar[piece]);
+      fprintf(file, "%3c", PceChar[piece]);
     }
-    printf("\n");
+    fprintf(file, "\n");
   }
 
-  printf("\n   ");
-  for (file = FILE_A; file <= FILE_H; file++)
+  fprintf(file, "\n   ");
+  for (fileIndex = FILE_A; fileIndex <= FILE_H; fileIndex++)
   {
-    printf("%3c", 'a' + file);
+    fprintf(file, "%3c", 'a' + fileIndex);
   }
-  printf("\n");
-  printf("side:%c\n", SideChar[pos->side]);
-  printf("enPas:%d\n", pos->enPas);
-  printf("castle:%c%c%c%c\n",
-         pos->castlePerm & WKCA ? 'K' : '-',
-         pos->castlePerm & WQCA ? 'Q' : '-',
-         pos->castlePerm & BKCA ? 'k' : '-',
-         pos->castlePerm & BQCA ? 'q' : '-');
-  printf("PosKey:%llX\n", pos->posKey);
+  fprintf(file, "\n");
+
+  fprintf(file, "side:%c\n", SideChar[pos->side]);
+  fprintf(file, "enPas:%d\n", pos->enPas);
+  fprintf(file, "castle:%c%c%c%c\n",
+          pos->castlePerm & WKCA ? 'K' : '-',
+          pos->castlePerm & WQCA ? 'Q' : '-',
+          pos->castlePerm & BKCA ? 'k' : '-',
+          pos->castlePerm & BQCA ? 'q' : '-');
+
+  // Write PosKey to file
+  fprintf(file, "PosKey:%llX\n", pos->posKey);
+
+  // Close the file after writing
+  fclose(file);
+
+  printf("Board output written to 'board_output.txt'.\n");
 }
 
 void MirrorBoard(S_BOARD *pos)
