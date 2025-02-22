@@ -1,10 +1,14 @@
+// defs.h
+
 #ifndef DEFS_H
 #define DEFS_H
 
 #include "stdlib.h"
 
+// Enable debugging
 #define DEBUG
 
+// Assert macro used for debugging
 #ifndef DEBUG
 #define ASSERT(n)
 #else
@@ -20,63 +24,44 @@
   }
 #endif
 
-typedef unsigned long long U64; // 64 bit unsigned integer
+// Type definitions
+typedef unsigned long long U64; // 64-bit unsigned integer
 
+// Constants and board dimensions
 #define NAME "Vice 1.0"
-#define BRD_SQ_NUM 120
+#define BRD_SQ_NUM 120  // Total number of squares on the board
 
-#define MAXGAMEMOVES 2048
+#define MAXGAMEMOVES 2048  // Maximum number of game moves
 
-#define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" // Initial FEN string
 
+// Piece enumeration
+// clang-format off
 enum
 {
   EMPTY,
-  wP,
-  wN,
-  wB,
-  wR,
-  wQ,
-  wK,
-  bP,
-  bN,
-  bB,
-  bR,
-  bQ,
-  bK
-};
-enum
-{
-  FILE_A,
-  FILE_B,
-  FILE_C,
-  FILE_D,
-  FILE_E,
-  FILE_F,
-  FILE_G,
-  FILE_H,
-  FILE_NONE
-};
-enum
-{
-  RANK_1,
-  RANK_2,
-  RANK_3,
-  RANK_4,
-  RANK_5,
-  RANK_6,
-  RANK_7,
-  RANK_8,
-  RANK_NONE
-};
-enum
-{
-  WHITE,
-  BLACK,
-  BOTH
+  wP, wN, wB, wR, wQ, wK, bP, bN, bB, bR, bQ, bK
 };
 
-// clang-format off
+// File enumeration (A-H, or NONE)
+enum
+{
+  FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H, FILE_NONE
+};
+
+// Rank enumeration (1-8, or NONE)
+enum
+{
+  RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, RANK_NONE
+};
+
+// Side enumeration (White, Black, or Both)
+enum
+{
+  WHITE, BLACK, BOTH
+};
+
+// Board square coordinates (using a 10x12 board)
 enum
 {
   A1 = 21,  B1,  C1,  D1,  E1,  F1,  G1,  H1,
@@ -87,33 +72,31 @@ enum
   A6 = 71,  B6,  C6,  D6,  E6,  F6,  G6,  H6,
   A7 = 81,  B7,  C7,  D7,  E7,  F7,  G7,  H7,
   A8 = 91,  B8,  C8,  D8,  E8,  F8,  G8,  H8,
-  NO_SQ,
-  OFFBOARD
+  NO_SQ, OFFBOARD
 };
+
 // clang-format on
 
+// Boolean values
 enum
 {
-  FALSE,
-  TRUE
+  FALSE, TRUE
 };
 
+// Castling permissions
 enum
 {
-  WKCA = 1,
-  WQCA = 2,
-  BKCA = 4,
-  BQCA = 8
+  WKCA = 1, WQCA = 2, BKCA = 4, BQCA = 8
 };
 
+// Structure to store game move with its associated score
 typedef struct
 {
   int move;
   int score;
-
 } S_MOVE;
 
-
+// Structure to store undo information (move, castling permissions, en passant, etc.)
 typedef struct
 {
   int move;
@@ -121,56 +104,46 @@ typedef struct
   int enPas;
   int fiftyMove;
   U64 posKey;
-
 } S_UNDO;
 
+// Board structure
 typedef struct
 {
-  int pieces[BRD_SQ_NUM];
-  U64 pawns[3]; // 1 for white, 2 for black, 3 for both
+  int pieces[BRD_SQ_NUM];   // Array of pieces on the board
+  U64 pawns[3];             // Bitboards for white, black, and both pawns
 
-  int kingSq[2]; // 0 for white, 1 for black
+  int kingSq[2];            // Positions of white and black kings
 
-  int side;      // 0 for white, 1 for black
-  int enPas;     // en passant square
-  int fiftyMove; // 50 move rule
+  int side;                 // Side to move (0 for white, 1 for black)
+  int enPas;                // En passant square
+  int fiftyMove;            // Fifty-move rule counter
 
-  int ply;    // half moves
-  int hisPly; // full moves
+  int ply;                  // Half move counter
+  int hisPly;               // Full move counter
 
-  int castlePerm; // 4 bits for each castling permission
+  int castlePerm;           // Castling permissions (4 bits for each side)
 
-  U64 posKey;
+  U64 posKey;               // Position key for hashing
 
-  int pceNum[13];  // number of pieces of each type
-  int bigPce[2];   // number of non-pawn pieces
-  int majPce[2];   // number of rooks and queens
-  int minPce[2];   // number of bishops and knights
-  int material[2]; // material score
+  int pceNum[13];           // Number of pieces of each type
+  int bigPce[2];            // Number of non-pawn pieces (big pieces)
+  int majPce[2];            // Number of major pieces (rooks, queens)
+  int minPce[2];            // Number of minor pieces (knights, bishops)
+  int material[2];          // Material score for both sides
 
-  S_UNDO history[MAXGAMEMOVES];
+  S_UNDO history[MAXGAMEMOVES];  // History of moves for undo functionality
 
-  int pList[13][10]; // piece list
-
+  int pList[13][10];        // Piece lists (for each type)
 } S_BOARD;
 
-/* GAME MOVE */
-
-/*
-0000 0000 0000 0000 0000 0111 1111 -> From 0x7F
-0000 0000 0000 0011 1111 1000 0000 -> To >> 7, 0x7F
-0000 0000 0011 1100 0000 0000 0000 -> Captured >> 14, 0xF
-0000 0000 0100 0000 0000 0000 0000 -> EP 0x40000
-0000 0000 1000 0000 0000 0000 0000 -> Pawn Start 0x80000
-0000 1111 0000 0000 0000 0000 0000 -> Promoted Piece >> 20, 0xF
-0001 0000 0000 0000 0000 0000 0000 -> Castle 0x1000000
-*/
-
+// Game move bit encoding:
+// These macros help in extracting the relevant information from a move representation
 #define FROMSQ(m) ((m) & 0x7F)
 #define TOSQ(m) (((m)>>7) & 0x7F)
 #define CAPTURED(m) (((m)>>14) & 0xF)
 #define PROMOTED(m) (((m)>>20) & 0xF)
 
+// Move flags
 #define MFLAGEP 0x40000
 #define MFLAGPS 0x80000
 #define MFLAGCA 0x1000000
@@ -178,7 +151,7 @@ typedef struct
 #define MFLAGCAP 0x7C000
 #define MFLAGPROM 0xF00000
 
-// MACROS
+// Macros for bit manipulation and square conversion
 #define FR2SQ(f, r) ((21 + (f)) + ((r) * 10))
 #define SQ64(sq120) (Sq120ToSq64[(sq120)])
 #define SQ120(sq64) (Sq64ToSq120[(sq64)])
@@ -187,59 +160,65 @@ typedef struct
 #define CLRBIT(bb, sq) ((bb) &= ClearMask[(sq)])
 #define SETBIT(bb, sq) ((bb) |= SetMask[(sq)])
 
+// Piece classification checks
 #define IsBQ(p) (PieceBishopQueen[(p)])
 #define IsRQ(p) (PieceRookQueen[(p)])
 #define IsKn(p) (PieceKnight[(p)])
 #define IsKi(p) (PieceKing[(p)])
 
-// GLOBALS
-extern int Sq120ToSq64[BRD_SQ_NUM];
-extern int Sq64ToSq120[64];
-extern U64 SetMask[64];
-extern U64 ClearMask[64];
+// External global variables
+extern int Sq120ToSq64[BRD_SQ_NUM];   // Square conversion table from 120 to 64 squares
+extern int Sq64ToSq120[64];            // Square conversion table from 64 to 120 squares
+extern U64 SetMask[64];                // Masks for setting bits
+extern U64 ClearMask[64];              // Masks for clearing bits
 
-extern U64 PieceKeys[13][120];
-extern U64 SideKey;
-extern U64 CastleKeys[16];
+extern U64 PieceKeys[13][120];         // Piece key hashes for each piece
+extern U64 SideKey;                    // Side key for hash table
+extern U64 CastleKeys[16];             // Castling keys for hash table
 
-extern char PceChar[];
-extern char SideChar[];
-extern char RankChar[];
-extern char FileChar[];
+extern char PceChar[];                 // Piece character representation
+extern char SideChar[];                // Side character representation
+extern char RankChar[];                // Rank character representation
+extern char FileChar[];                // File character representation
 
-extern int PieceBig[13];
-extern int PieceMaj[13];
-extern int PieceMin[13];
-extern int PieceVal[13];
-extern int PieceCol[13];
+extern int PieceBig[13];               // Array for big pieces
+extern int PieceMaj[13];               // Array for major pieces
+extern int PieceMin[13];               // Array for minor pieces
+extern int PieceVal[13];               // Piece values
+extern int PieceCol[13];               // Piece color array
 
-extern int FilesBrd[BRD_SQ_NUM];
-extern int RanksBrd[BRD_SQ_NUM];
+extern int FilesBrd[BRD_SQ_NUM];      // Files for each square on the board
+extern int RanksBrd[BRD_SQ_NUM];      // Ranks for each square on the board
 
-extern int PieceKnight[13];
-extern int PieceKing[13];
-extern int PieceRookQueen[13];
-extern int PieceBishopQueen[13];
+extern int PieceKnight[13];            // Knight piece identification array
+extern int PieceKing[13];              // King piece identification array
+extern int PieceRookQueen[13];         // Rook and Queen identification array
+extern int PieceBishopQueen[13];       // Bishop and Queen identification array
 
-// FUNCTIONS
+// External functions
+// init.c
+extern void AllInit();                 // Initialize all components
 
-extern void AllInit();
+// bitboards.c
+extern void PrintBitBoard(U64 bb);     // Print a bitboard
+extern int PopBit(U64 *bb);            // Pop a bit from a bitboard
+extern int CountBits(U64 b);           // Count the number of bits set in a bitboard
 
-extern void PrintBitBoard(U64 bb);
-extern int PopBit(U64 *bb);
-extern int CountBits(U64 b);
+// hashkeys.c
+extern U64 GeneratePosKey(const S_BOARD *pos);  // Generate a position key for hashing
 
-extern U64 GeneratePosKey(const S_BOARD *pos);
+// board.c
+extern void ResetBoard(S_BOARD *pos);          // Reset the board to the starting position
+extern int ParseFen(char *fen, S_BOARD *pos);  // Parse a FEN string
+extern void PrintBoard(const S_BOARD *pos);   // Print the board
+extern void UpdateListsMaterial(S_BOARD *pos); // Update piece lists and material counts
+extern int CheckBoard(const S_BOARD *pos);     // Check the validity of the board position
 
-extern void ResetBoard(S_BOARD *pos);
-extern int ParseFen(char *fen, S_BOARD *pos);
-extern void PrintBoard(const S_BOARD *pos);
-extern void UpdateListsMaterial(S_BOARD *pos);
-extern int CheckBoard(const S_BOARD *pos);
+// attack.c
+extern int SqAttacked(const int sq, const int side, const S_BOARD *pos); // Check if square is attacked
 
-extern int SqAttacked(const int sq, const int side, const S_BOARD *pos);
+// io.c
+extern char *PrSq(const int sq);  // Print square
+extern char *PrMove(const int move);  // Print move
 
-extern char *PrMove(const int move);
-extern char *PrSq(const int sq);
-
-#endif
+#endif // DEFS_H
