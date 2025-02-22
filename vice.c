@@ -9,21 +9,20 @@ int main()
 
   AllInit();
 
-  S_BOARD board[1];
-
-  ParseFen(FEN4, board);
-
-  PrintBoard(board);
-
-  ASSERT(CheckBoard(board));
-
   int move = 0;
-  int from = 6;
-  int to = 12;
+  int from = A2;
+  int to = H7;
   int cap = wR;
-  int prom = bR;
-  move = ((from) | (to << 7) | (cap << 14) | (prom << 20));
-  
-  printf("Move: %d\n", move);
+  int prom = wR;
+
+  move = ((from | (to << 7) | (cap << 14) | (prom << 20)));
+
+  printf("from:%d to:%d cap:%d prom:%d\n",
+         FROMSQ(move), TOSQ(move), CAPTURED(move),
+         PROMOTED(move));
+
+  printf("from: %s\n", PrSq(from));
+  printf("to: %s\n", PrSq(to));
+  printf("move: %s\n", PrMove(move));
   return 0;
 }
