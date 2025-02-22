@@ -57,3 +57,27 @@ char *PrMove(const int move)
 
   return MvStr;  // Return the formatted move string
 }
+
+// Function to print the move list (used for debugging or displaying moves)
+void PrintMoveList(const S_MOVELIST *list)
+{
+  int index = 0;  // Index for iterating through the move list
+  int score = 0;  // Score associated with each move
+  int move = 0;   // The actual move value
+
+  // Print header for the move list
+  printf("MoveList:\n");
+
+  // Loop through all moves in the move list and print details
+  for (index = 0; index < list->count; ++index)
+  {
+    move = list->moves[index].move;  // Get the move from the list
+    score = list->moves[index].score;  // Get the score for the move
+
+    // Print move number, move description, and score
+    printf("Move:%d > %s (score:%d)\n", index + 1, PrMove(move), score);
+  }
+
+  // Print the total number of moves in the move list
+  printf("MoveList Total %d Moves:\n\n", list->count);
+}
