@@ -25,7 +25,7 @@
 
 typedef unsigned long long U64;
 
-#define NAME "Vice 1.1"
+#define NAME "Chess 2.1"
 #define BRD_SQ_NUM 120
 
 #define MAXGAMEMOVES 2048

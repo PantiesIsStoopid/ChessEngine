@@ -418,7 +418,7 @@ void SearchPosition(S_BOARD *pos, S_SEARCHINFO *info)
   }
   else
   {
-    printf("\n\n***!! Vice makes move %s !!***\n\n", PrMove(bestMove));
+    printf("\n\n***!! Bot makes move %s !!***\n\n", PrMove(bestMove));
     MakeMove(pos, bestMove);
     PrintBoard(pos);
   }

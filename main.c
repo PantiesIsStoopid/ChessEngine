@@ -1,4 +1,4 @@
-// vice.c
+// main.c
 
 #include "stdio.h"
 #include "defs.h"
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  printf("Welcome to Vice! Type 'vice' for console mode...\n");
+  printf("Welcome to Chess engine! Type 'console' for console mode...\n");
 
   char line[256];
   while (TRUE)
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
         break;
       continue;
     }
-    else if (!strncmp(line, "vice", 4))
+    else if (!strncmp(line, "console", 4))
     {
       Console_Loop(pos, info);
       if (info->quit == TRUE)
